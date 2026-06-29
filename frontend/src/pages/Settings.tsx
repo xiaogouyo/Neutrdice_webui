@@ -20,6 +20,7 @@ export default function Settings() {
   const [currentVersion, setCurrentVersion] = useState('');
   const [selectedChannel, setSelectedChannel] = useState('stable');
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [currentChannel, setCurrentChannel] = useState('stable');
 
   const [panelVersion, setPanelVersion] = useState<string>('');
   const [panelUpdateLoading, setPanelUpdateLoading] = useState(false);
@@ -45,6 +46,10 @@ export default function Settings() {
       if (res.success && res.versions && typeof res.versions === 'object') {
         setVersions(res.versions);
         setCurrentVersion(res.versions?.sealdice?.latest?.tag_name || '');
+      }
+      if (res.current) {
+        setCurrentChannel(res.current);
+        setSelectedChannel(res.current);
       }
     });
   }, []);
@@ -97,6 +102,25 @@ export default function Settings() {
     }
   };
 
+  const handleUpdate = async () => {
+    if (!confirm(`确定要切换到 ${selectedChannel === 'stable' ? '稳定版' : selectedChannel === 'latest' ? '最新版本' : '预发布版'} 吗？`)) return;
+    setUpdateLoading(true);
+    try {
+      const res = await axios.post('/api/version/change', { channel: selectedChannel });
+      if (res.data?.success) {
+        alert(res.data.message || '切换成功');
+        setCurrentChannel(selectedChannel);
+        setCurrentVersion(versions[selectedChannel]?.tag_name || '');
+      } else {
+        alert(res.data?.error || '切换失败');
+      }
+    } catch (err: any) {
+      alert(err?.response?.data?.error || err?.message || '切换失败');
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('neutrdice_password');
     window.location.href = '/login';
@@ -143,7 +167,7 @@ export default function Settings() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">当前运行版本</p>
-                <p className="text-gray-900 dark:text-white font-medium mt-1">{currentVersion || '未知版本'}</p>
+                <p className="text-gray-900 dark:text-white font-medium mt-1">{currentVersion || (versions[currentChannel]?.tag_name || versions.stable?.tag_name) || '未知版本'}</p>
               </div>
               {currentVersion && (
                 <span className="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">
