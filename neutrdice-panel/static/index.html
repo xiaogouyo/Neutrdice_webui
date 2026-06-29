@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neutrdice Panel</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <img src="/logo.svg" alt="Neutrdice" class="logo">
+      <span class="brand">Neutrdice</span>
+    </div>
+    <div class="header-right">
+      <span class="timestamp" id="clock">--</span>
+    </div>
+  </header>
+
+  <!-- Status Cards -->
+  <section class="cards">
+    <div class="card" id="card-sealdice">
+      <div class="card-header">
+        <div class="card-icon sd-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <div class="card-title-area">
+          <h3>SealDice 海豹核心</h3>
+          <span class="card-version" id="sd-version">--</span>
+        </div>
+        <span class="status-badge" id="sd-status">--</span>
+      </div>
+      <div class="card-body">
+        <div class="info-row"><span class="label">镜像</span><span class="value" id="sd-image">--</span></div>
+        <div class="info-row"><span class="label">运行时间</span><span class="value" id="sd-uptime">--</span></div>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-primary" onclick="openWebUI('sealdice')" id="btn-sd-webui" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          打开 WebUI
+        </button>
+        <button class="btn btn-outline" onclick="restartContainer('sealdice')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          重启
+        </button>
+        <button class="btn btn-outline" onclick="showLogs('sealdice')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          日志
+        </button>
+      </div>
+    </div>
+
+    <div class="card" id="card-napcat">
+      <div class="card-header">
+        <div class="card-icon nc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="card-title-area">
+          <h3>NapCat 登录适配器</h3>
+        </div>
+        <span class="status-badge" id="nc-status">--</span>
+      </div>
+      <div class="card-body">
+        <div class="info-row"><span class="label">镜像</span><span class="value" id="nc-image">--</span></div>
+        <div class="info-row"><span class="label">运行时间</span><span class="value" id="nc-uptime">--</span></div>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-primary" onclick="openWebUI('napcat')" id="btn-nc-webui" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          打开 WebUI
+        </button>
+        <button class="btn btn-outline" onclick="restartContainer('napcat')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          重启
+        </button>
+        <button class="btn btn-outline" onclick="showLogs('napcat')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          日志
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Version Management -->
+  <section class="panel">
+    <div class="panel-header">
+      <h3>版本管理</h3>
+      <span class="current-tag" id="current-channel-tag">--</span>
+    </div>
+    <div class="version-grid" id="version-grid">
+      <div class="version-card skeleton">加载中...</div>
+    </div>
+  </section>
+
+  <!-- Log Viewer Modal -->
+  <div class="modal-overlay" id="log-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="log-title">容器日志</h3>
+        <div class="modal-actions">
+          <button class="btn btn-sm btn-outline" onclick="refreshLogs()">刷新</button>
+          <button class="btn btn-sm btn-outline" onclick="closeLogs()">关闭</button>
+        </div>
+      </div>
+      <pre class="log-viewer" id="log-content">加载中...</pre>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toast-container"></div>
+
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

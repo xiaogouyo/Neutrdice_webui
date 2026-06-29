@@ -1,0 +1,63 @@
+services:
+  # ===== 海豹核心 =====
+  sealdice:
+    image: shiaworkshop/sealdice:stable
+    container_name: sealdice
+    ports:
+      - "${SEALDICE_PORT:-3211}:3211"
+    volumes:
+      - "./sealdice/data:/sealdice/data"
+      - "./sealdice/backups:/sealdice/backups"
+      - "./napcat/data:/app/napcat/data"
+    networks:
+      - neutrdice-net
+    environment:
+      - MODE=napcat
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+
+  # ===== NapCat 登录适配器 =====
+  napcat:
+    image: mlikiowa/napcat-docker:latest
+    container_name: napcat
+    ports:
+      - "${NAPCAT_WEBUI_PORT:-6099}:6099"
+    volumes:
+      - "./napcat/data:/app/.napcat"
+      - "./napcat/qq_data:/app/napcat/.config/QQ"
+    networks:
+      - neutrdice-net
+    environment:
+      - TZ=Asia/Shanghai
+      - NAPCAT_UID=0
+      - NAPCAT_GID=0
+    restart: unless-stopped
+
+  # ===== Neutrdice 管理面板 =====
+  neutrdice-panel:
+    build: ./neutrdice-panel
+    container_name: neutrdice-panel
+    ports:
+      - "${PANEL_PORT:-23333}:5000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./docker-compose.yml:/app/compose/docker-compose.yml:ro
+      - ./.env:/app/compose/.env:ro
+    networks:
+      - neutrdice-net
+    environment:
+      - COMPOSE_DIR=/app/compose
+      - SEALDICE_CONTAINER=sealdice-core
+      - NAPCAT_CONTAINER=napcat-core
+      - HOST_IP=${HOST_IP:-localhost}
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  neutrdice-net:
+    driver: bridge

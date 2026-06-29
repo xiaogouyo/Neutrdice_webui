@@ -1,0 +1,165 @@
+imSession:
+    endPoints:
+        - baseInfo:
+            id: 44b6efe8-64e9-4de6-b391-cc5e875b2edb
+            nickname: ""
+            state: 2
+            userId: QQ:100001
+            groupNum: 0
+            cmdExecutedNum: 0
+            cmdExecutedLastTime: 0
+            onlineTotalTime: 0
+            platform: QQ
+            relWorkDir: x
+            enable: true
+            protocolType: onebot
+            isPublic: false
+          adapter:
+            isReverse: false
+            reverseAddr: ""
+            connectUrl: ws://napcat:1234
+            accessToken: ""
+            useInPackGoCqhttp: false
+            builtinMode: gocq
+            inPackGoCqLastAutoLoginTime: 0
+            inPackGoCqHttpLoginSucceeded: true
+            inPackGoCqHttpLastRestricted: 0
+            forcePrintLog: false
+            inPackGoCqHttpProtocol: 0
+            inPackGoCqHttpAppVersion: ""
+            inPackGoCqHttpPassword: ""
+            ignoreFriendRequest: false
+            implementation: gocq
+            useSignServer: false
+            signServerConfig: null
+            extraArgs: ""
+            signServerVer: ""
+            signServerName: ""
+deckList:
+    - enable: true
+      errText: ""
+      filename: data/decks/seal.json
+      format: Dice!
+      formatVersion: 1
+      name: SealDice内置牌堆
+      updateUrls: []
+      etag: ""
+      cloud: false
+      storeID: ""
+commandPrefix:
+    - '!'
+    - .
+    - 。
+    - /
+diceMasters:
+    - UI:1001
+configVersion: 1
+commandCompatibleMode: true
+lastSavedTime: 2026-06-25T13:12:55.105609896+08:00
+noticeIds: []
+onlyLogCommandInGroup: false
+onlyLogCommandInPrivate: false
+versionCode: 10300
+messageDelayRangeStart: 0
+messageDelayRangeEnd: 0.4
+workInQQChannel: true
+QQChannelAutoOn: false
+QQChannelLogMessage: false
+QQEnablePoke: true
+textCmdTrustOnly: true
+ignoreUnaddressedBotCmd: false
+UILogLimit: 0
+friendAddComment: ""
+customReplyConfigEnable: false
+autoReloginEnable: false
+refuseGroupInvite: false
+upgradeWindowId: ""
+upgradeEndpointId: ""
+botExtFreeSwitch: false
+trustOnlyMode: false
+aliveNoticeEnable: false
+aliveNoticeValue: '@every 3h'
+replyDebugMode: false
+playerNameWrapEnable: true
+VMVersionForReply: v1
+VMVersionForDeck: v2
+VMVersionForCustomText: v2
+VMVersionForMsg: v2
+name: default
+dataDir: data/default
+rateLimitEnabled: false
+personalReplenishRate: '@every 3s'
+groupReplenishRate: '@every 3s'
+personalBurst: 3
+groupBurst: 3
+quitInactiveThreshold: 0s
+quitInactiveBatchSize: 10
+quitInactiveBatchWait: 30
+defaultCocRuleIndex: 0
+maxExecuteTime: 12
+maxCocCardGen: 5
+extDefaultSettings:
+    - name: coc7
+      autoActive: true
+      disabledCommand: {coc: false, en: false, li: false, rc/ra: false, rcv/rav: false, sc: false, setcoc: false, st: false, ti: false}
+    - name: story
+      autoActive: true
+      disabledCommand: {modu: false, name: false, namednd: false, who: false}
+    - name: core
+      autoActive: true
+      disabledCommand: {team: false}
+    - name: log
+      autoActive: true
+      disabledCommand: {log: false, ob: false, sn: false, stat: false}
+    - name: fun
+      autoActive: true
+      disabledCommand: {'&': false, alias: false, check: false, drl: false, dx: false, ek: false, ekgen: false, gugu: false, jrrp: false, jsr: false, ping: false, rsr: false, send: false, text: false, welcome: false, ww: false}
+    - name: deck
+      autoActive: true
+      disabledCommand: {draw: false}
+    - name: reply
+      autoActive: true
+      disabledCommand: {}
+    - name: dnd5e
+      autoActive: true
+      disabledCommand: {cast: false, dnd: false, init: false, rc: false, ri: false, ss: false, st: false, 死亡豁免: false, 长休: false}
+banList:
+    banBehaviorRefuseReply: true
+    banBehaviorRefuseInvite: true
+    banBehaviorQuitLastPlace: false
+    banBehaviorQuitPlaceImmediately: false
+    banBehaviorQuitIfAdmin: false
+    banBehaviorQuitIfAdminSilentIfNotAdmin: false
+    thresholdWarn: 100
+    thresholdBan: 200
+    autoBanMinutes: 720
+    scoreReducePerMinute: 1
+    scoreGroupMuted: 100
+    scoreGroupKicked: 200
+    scoreTooManyCommand: 100
+    jointScorePercentOfGroup: 0.5
+    jointScorePercentOfInviter: 0.3
+jsEnable: true
+disabledJsScripts: {}
+logSizeNoticeEnable: true
+LogSizeNoticeCount: 500
+mailEnable: false
+mailFrom: ""
+mailPassword: ""
+mailSmtp: ""
+newsMark: ""
+enableCensor: false
+censorMode: 0
+censorThresholds: {}
+censorHandlers: {}
+censorScores: {}
+censorCaseSensitive: false
+censorMatchPinyin: false
+censorFilterRegexStr: ""
+publicDiceEnable: false
+publicDiceId: ""
+publicDiceName: ""
+publicDiceBrief: ""
+publicDiceNote: ""
+publicDiceAvatar: ""
+backendUrls: []
