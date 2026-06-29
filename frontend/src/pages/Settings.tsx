@@ -104,17 +104,6 @@ export default function Settings() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">设置</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">配置面板服务参数</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => versionsApi.getVersions().then((res) => {
-              if (res.success && res.versions && typeof res.versions === 'object') setVersions(res.versions);
-            })}
-            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 transition-colors"
-          >
-            <HiRefresh className="w-4 h-4" />
-            刷新版本
-          </button>
-        </div>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700">
