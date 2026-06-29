@@ -30,7 +30,7 @@ NAME_MAP = {
 }
 NEUTRDICE_PANEL_REPO = os.environ.get(
     "NEUTRDICE_PANEL_REPO",
-    "https://github.com/DiceZone/Sealdice-Docker.git",
+    "https://github.com/xiaogouyo/Neutrdice_webui.git",
 )
 NEUTRDICE_PANEL_REPO_NAME = os.environ.get("NEUTRDICE_PANEL_REPO_NAME", "NeutrDice")
 # 日志持久化目录
