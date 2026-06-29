@@ -751,12 +751,30 @@ def api_change_version():
         return jsonify({"error": str(e)}), 500
 
 
+def _fetch_github_latest_tag(org_repo: str) -> tuple[str, str]:
+    """获取 GitHub 最新的 tag 版本号和发布说明"""
+    try:
+        import urllib.request
+
+        url = f"https://api.github.com/repos/{org_repo}/releases/latest"
+        req = urllib.request.Request(url, headers={"User-Agent": "Neutrdice-Panel", "Accept": "application/vnd.github+json"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode())
+
+        tag = data.get("tag_name", "").lstrip("v")
+        body = data.get("body", "")[:500] if data.get("body") else ""
+        log("_fetch_github_latest_tag tag=%s", tag)
+        return tag, body
+    except Exception as e:
+        log("_fetch_github_latest_tag error: %s", e)
+        return "", ""
+
+
 @app.route("/api/panel/version")
 def api_panel_version():
     t0 = time.time()
     log("api_panel_version start")
     try:
-        repo_path = os.environ.get("NEUTRDICE_PANEL_REPO_PATH", "/app/compose")
         now = time.time()
         global _panel_version_cache
         if (
@@ -766,15 +784,30 @@ def api_panel_version():
             log("api_panel_version cache hit")
             return jsonify(_panel_version_cache["data"])
 
-        local_rev = _get_local_git_revision(repo_path)
-        remote_rev = _get_remote_latest_revision(NEUTRDICE_PANEL_REPO)
-        update_available = bool(remote_rev and local_rev and remote_rev != local_rev)
+        # 从 GitHub Releases 获取最新版本信息
+        latest_tag, release_body = _fetch_github_latest_tag(NEUTRDICE_PANEL_REPO.rstrip(".git").replace("https://github.com/", ""))
+
+        # 尝试从本地 git 读取当前版本（如果是在容器内从 git clone 运行的）
+        local_rev = ""
+        repo_path = os.environ.get("NEUTRDICE_PANEL_REPO_PATH", "/app/compose")
+        if os.path.exists(os.path.join(repo_path, ".git")):
+            local_rev = _get_local_git_revision(repo_path)
+
+        # 如果没有本地版本信息，从镜像标签中尝试提取
+        if not local_rev:
+            import socket
+            hostname = socket.gethostname()
+            # 尝试用 IMAGE_TAG 环境变量或默认值
+            local_rev = os.environ.get("IMAGE_TAG", "unknown")
+
+        update_available = bool(latest_tag and local_rev and latest_tag != local_rev)
         payload = {
             "success": True,
             "repo": NEUTRDICE_PANEL_REPO,
             "repo_name": NEUTRDICE_PANEL_REPO_NAME,
+            "latest_tag": latest_tag,
             "local_rev": local_rev,
-            "remote_rev": remote_rev,
+            "release_body": release_body,
             "update_available": update_available,
         }
         _panel_version_cache = {"data": payload, "ts": now}

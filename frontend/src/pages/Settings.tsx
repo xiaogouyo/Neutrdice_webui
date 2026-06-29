@@ -18,6 +18,9 @@ export default function Settings() {
   const [panelVersion, setPanelVersion] = useState<string>('');
   const [panelUpdateLoading, setPanelUpdateLoading] = useState(false);
   const [panelUpdateAvailable, setPanelUpdateAvailable] = useState(false);
+  const [releaseBody, setReleaseBody] = useState<string>('');
+  const [latestTag, setLatestTag] = useState<string>('');
+  const [panelVersionLoading, setPanelVersionLoading] = useState(true);
 
   useEffect(() => {
     configApi
@@ -37,14 +40,19 @@ export default function Settings() {
   }, []);
 
   const fetchPanelVersion = async () => {
+    setPanelVersionLoading(true);
     try {
       const res = await axios.get('/api/panel/version');
       if (res.data?.success) {
         setPanelVersion(res.data.local_rev || 'unknown');
         setPanelUpdateAvailable(Boolean(res.data.update_available));
+        setReleaseBody(res.data.release_body || '');
+        setLatestTag(res.data.latest_tag || '');
       }
     } catch (err: any) {
       console.error('Failed to fetch panel version', err);
+    } finally {
+      setPanelVersionLoading(false);
     }
   };
 
@@ -115,18 +123,25 @@ export default function Settings() {
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">从 GitHub 检查并更新 NeutrDice 当前环境版本</p>
         </div>
         <div className="p-6 space-y-4">
+          {panelVersionLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
           <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-3">
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">当前提交版本</p>
-                <p className="text-gray-900 dark:text-white font-medium mt-1 font-mono">{panelVersion || '未知版本'}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">当前版本</p>
+                <p className="text-gray-900 dark:text-white font-medium mt-1 font-mono">
+                  {panelVersion || '未知版本'}
+                  {panelUpdateAvailable && (
+                    <span className="ml-2 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-normal">
+                      v{latestTag} 可用
+                    </span>
+                  )}
+                </p>
               </div>
               <div className="flex items-center gap-2">
-                {panelUpdateAvailable && (
-                  <span className="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-medium">
-                    可更新
-                  </span>
-                )}
                 <button
                   onClick={fetchPanelVersion}
                   className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 transition-colors"
@@ -153,7 +168,14 @@ export default function Settings() {
                 </button>
               </div>
             </div>
+            {releaseBody && (
+              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">更新日志</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{releaseBody}</p>
+              </div>
+            )}
           </div>
+          )}
         </div>
       </div>
 
