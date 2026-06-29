@@ -1,0 +1,62 @@
+name: Daily Release Check
+
+on:
+  schedule:
+    # 每天早上 8:00 (UTC+8) 执行，即 UTC 0:00
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    # 允许手动触发
+
+jobs:
+  check-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Get latest commit info
+        id: info
+        run: |
+          COMMIT_MSG=$(git log -1 --format='%s')
+          COMMIT_HASH=$(git rev-parse --short=7 HEAD)
+          COMMIT_DATE=$(git log -1 --format='%ci' | cut -d' ' -f1)
+          echo "commit_msg=${COMMIT_MSG}" >> $GITHUB_OUTPUT
+          echo "commit_hash=${COMMIT_HASH}" >> $GITHUB_OUTPUT
+          echo "commit_date=${COMMIT_DATE}" >> $GITHUB_OUTPUT
+          echo "tag_name=v${COMMIT_DATE}-${COMMIT_HASH}" >> $GITHUB_OUTPUT
+
+      - name: Check if release already exists
+        id: check_release
+        run: |
+          TAG_NAME="${{ steps.info.outputs.tag_name }}"
+          # 检查是否存在同名 tag
+          if git tag -l "$TAG_NAME" | grep -q "$TAG_NAME"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Release $TAG_NAME already exists, skipping."
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        if: steps.check_release.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.info.outputs.tag_name }}
+          name: ${{ steps.info.outputs.tag_name }}
+          body: |
+            ## 每日构建版本
+
+            **提交**: `${{ steps.info.outputs.commit_hash }}`
+            **提交信息**: ${{ steps.info.outputs.commit_msg }}
+            **构建日期**: ${{ steps.info.outputs.commit_date }}
+
+            ### 变更
+
+            ${{ steps.info.outputs.commit_msg }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
