@@ -31,6 +31,8 @@ services:
       - SEALDICE_CONTAINER=${COMPOSE_PROJECT_NAME:-docker-3001}-sealdice-core
       - NAPCAT_CONTAINER=${COMPOSE_PROJECT_NAME:-docker-3001}-napcat-core
       - LOG_DIR=/app/logs
+      - NEUTRDICE_PANEL_REPO=https://github.com/xiaogouyo/Neutrdice_webui
+      - IMAGE_TAG=${PANEL_VERSION:-unknown}
     restart: unless-stopped
     networks:
       - ${COMPOSE_PROJECT_NAME:-docker-3001}-net
