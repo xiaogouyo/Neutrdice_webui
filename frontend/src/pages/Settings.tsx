@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { HiSave, HiRefresh, HiLockClosed, HiCloudDownload, HiCheck, HiLogout, HiArrowUp } from 'react-icons/hi';
-import { configApi, versionsApi } from '../api';
+import { HiSave, HiLockClosed, HiArrowUp, HiCheck, HiLogout } from 'react-icons/hi';
+import { configApi } from '../api';
 import axios from 'axios';
-import type { VersionInfo } from '../types';
 import clsx from 'clsx';
 
 export default function Settings() {
@@ -15,12 +14,6 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-
-  const [versions, setVersions] = useState<Record<string, VersionInfo | null>>({});
-  const [currentVersion, setCurrentVersion] = useState('');
-  const [selectedChannel, setSelectedChannel] = useState('stable');
-  const [updateLoading, setUpdateLoading] = useState(false);
-  const [currentChannel, setCurrentChannel] = useState('stable');
 
   const [panelVersion, setPanelVersion] = useState<string>('');
   const [panelUpdateLoading, setPanelUpdateLoading] = useState(false);
@@ -41,17 +34,6 @@ export default function Settings() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-    
-    versionsApi.getVersions().then((res) => {
-      if (res.success && res.versions && typeof res.versions === 'object') {
-        setVersions(res.versions);
-        setCurrentVersion(res.versions?.sealdice?.latest?.tag_name || '');
-      }
-      if (res.current) {
-        setCurrentChannel(res.current);
-        setSelectedChannel(res.current);
-      }
-    });
   }, []);
 
   const fetchPanelVersion = async () => {
@@ -102,25 +84,6 @@ export default function Settings() {
     }
   };
 
-  const handleUpdate = async () => {
-    if (!confirm(`确定要切换到 ${selectedChannel === 'stable' ? '稳定版' : selectedChannel === 'latest' ? '最新版本' : '预发布版'} 吗？`)) return;
-    setUpdateLoading(true);
-    try {
-      const res = await axios.post('/api/version/change', { channel: selectedChannel });
-      if (res.data?.success) {
-        alert(res.data.message || '切换成功');
-        setCurrentChannel(selectedChannel);
-        setCurrentVersion(versions[selectedChannel]?.tag_name || '');
-      } else {
-        alert(res.data?.error || '切换失败');
-      }
-    } catch (err: any) {
-      alert(err?.response?.data?.error || err?.message || '切换失败');
-    } finally {
-      setUpdateLoading(false);
-    }
-  };
-
   const handleLogout = () => {
     localStorage.removeItem('neutrdice_password');
     window.location.href = '/login';
@@ -150,83 +113,6 @@ export default function Settings() {
           >
             <HiRefresh className="w-4 h-4" />
             刷新版本
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700">
-        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <HiCloudDownload className="w-5 h-5 text-blue-500" />
-            版本管理
-          </h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">切换 NapCat / 海豹核心版本</p>
-        </div>
-        <div className="p-6 space-y-4">
-          <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">当前运行版本</p>
-                <p className="text-gray-900 dark:text-white font-medium mt-1">{currentVersion || (versions[currentChannel]?.tag_name || versions.stable?.tag_name) || '未知版本'}</p>
-              </div>
-              {currentVersion && (
-                <span className="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">
-                  运行中
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { value: 'stable', label: '稳定版', version: versions.stable?.tag_name, desc: '正式发布版本' },
-              { value: 'latest', label: '最新版本', version: versions.latest?.tag_name, desc: '包含最新功能' },
-              { value: 'pre', label: '预发布', version: versions.pre?.tag_name, desc: '尝鲜体验' },
-            ].map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setSelectedChannel(opt.value)}
-                className={clsx(
-                  'p-4 rounded-xl border text-left transition-all',
-                  selectedChannel === opt.value
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 hover:border-blue-300 dark:hover:border-blue-600'
-                )}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <p className={clsx(
-                    'text-sm font-medium',
-                    selectedChannel === opt.value ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'
-                  )}>
-                    {opt.label}
-                  </p>
-                  {selectedChannel === opt.value && (
-                    <HiCheck className="w-4 h-4 text-blue-500" />
-                  )}
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  {opt.version || opt.desc}
-                </p>
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={handleUpdate}
-            disabled={updateLoading}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50"
-          >
-            {updateLoading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                切换中...
-              </>
-            ) : (
-              <>
-                <HiCloudDownload className="w-4 h-4" />
-                切换到 {selectedChannel === 'stable' ? '稳定版' : selectedChannel === 'latest' ? '最新版本' : '预发布版'}
-              </>
-            )}
           </button>
         </div>
       </div>
