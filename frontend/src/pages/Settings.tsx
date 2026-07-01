@@ -10,6 +10,7 @@ export default function Settings() {
     panel_password: 'neutrdice2024',
     docker_socket: '/var/run/docker.sock',
     base_dir: '/opt/neutrdice',
+    image_mirror: 'ghcr.io',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -22,6 +23,14 @@ export default function Settings() {
   const [latestTag, setLatestTag] = useState<string>('');
   const [panelVersionLoading, setPanelVersionLoading] = useState(true);
 
+  // 镜像源选项
+  const mirrorOptions = [
+    { value: 'ghcr.io', label: 'GitHub (ghcr.io)', desc: 'GitHub 官方容器镜像源（推荐）' },
+    { value: 'docker.m.daocloud.io', label: 'DaoCloud', desc: '道客巴巴镜像加速（国内推荐）' },
+    { value: 'mirror.gcr.io', label: 'Google GCR', desc: 'Google GCR 镜像（需要代理）' },
+    { value: 'quay.io', label: 'Quay.io', desc: 'Red Hat 运营的容器镜像源' },
+  ];
+
   useEffect(() => {
     configApi
       .get()
@@ -32,6 +41,7 @@ export default function Settings() {
             panel_password: res.config.panel_password || 'neutrdice2024',
             docker_socket: res.config.docker_socket || '/var/run/docker.sock',
             base_dir: res.config.base_dir || '/opt/neutrdice',
+            image_mirror: res.config.image_mirror || 'ghcr.io',
           });
         }
       })
@@ -83,7 +93,8 @@ export default function Settings() {
     setSaving(true);
     setSaved(false);
     try {
-      await configApi.save(config);
+      // 只保存镜像源配置
+      await configApi.save({ image_mirror: config.image_mirror });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err: any) {
@@ -177,6 +188,88 @@ export default function Settings() {
             )}
           </div>
           )}
+        </div>
+      </div>
+
+      {/* 镜像源配置 */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+            镜像源配置
+          </h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">选择 NeutrDice 镜像下载源，解决国内拉取速度慢的问题</p>
+        </div>
+        <div className="p-6 space-y-3">
+          {mirrorOptions.map((option) => (
+            <label
+              key={option.value}
+              className={clsx(
+                'flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all',
+                config.image_mirror === option.value
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+              )}
+            >
+              <input
+                type="radio"
+                name="image_mirror"
+                value={option.value}
+                checked={config.image_mirror === option.value}
+                onChange={(e) => setConfig((c) => ({ ...c, image_mirror: e.target.value }))}
+                className="mt-1 w-4 h-4 text-blue-600 focus:ring-blue-500"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-gray-900 dark:text-white">{option.label}</span>
+                  {option.value === 'ghcr.io' && (
+                    <span className="px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs">
+                      默认
+                    </span>
+                  )}
+                  {option.value === 'docker.m.daocloud.io' && (
+                    <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs">
+                      国内推荐
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{option.desc}</p>
+              </div>
+            </label>
+          ))}
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50"
+            >
+              {saving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  保存中...
+                </>
+              ) : (
+                <>
+                  <HiSave className="w-4 h-4" />
+                  保存镜像源
+                </>
+              )}
+            </button>
+            {saved && (
+              <span className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
+                <HiCheck className="w-4 h-4" />
+                配置已保存
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            切换镜像源后需要重新部署容器才能生效，使用 Watchtower 可自动更新
+          </p>
         </div>
       </div>
 

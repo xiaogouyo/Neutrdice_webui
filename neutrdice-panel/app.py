@@ -1128,6 +1128,70 @@ def api_get_logs(container):
         return jsonify({"error": str(e)}), 500
 
 
+# --- 配置管理端点 ---
+CONFIG_FILE = os.path.join(os.environ.get("NEUTRDICE_BASE_DIR", "/opt/neutrdice"), "panel_config.json")
+
+
+def _load_config() -> dict:
+    """加载配置文件"""
+    try:
+        if os.path.exists(CONFIG_FILE):
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {}
+
+
+def _save_config(data: dict) -> bool:
+    """保存配置文件"""
+    try:
+        os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        log("_save_config error: %s", e)
+        return False
+
+
+@app.route("/api/config", methods=["GET"])
+def api_config_get():
+    """获取面板配置"""
+    try:
+        config = _load_config()
+        return jsonify({
+            "success": True,
+            "config": {
+                "image_mirror": config.get("image_mirror", "ghcr.io"),
+                "panel_port": os.environ.get("PANEL_PORT", "3001"),
+                "panel_password": os.environ.get("PANEL_PASSWORD", "neutrdice2024"),
+                "docker_socket": os.environ.get("DOCKER_SOCKET", "/var/run/docker.sock"),
+                "base_dir": os.environ.get("NEUTRDICE_BASE_DIR", "/opt/neutrdice"),
+            }
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/config", methods=["POST"])
+def api_config_save():
+    """保存面板配置"""
+    try:
+        data = request.get_json() or {}
+        config = _load_config()
+        
+        if "image_mirror" in data:
+            config["image_mirror"] = data["image_mirror"]
+        
+        if _save_config(config):
+            return jsonify({"success": True, "message": "配置已保存"})
+        else:
+            return jsonify({"success": False, "error": "保存失败"}), 500
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 def refresh_cache_loop():
     """后台定期刷新版本缓存"""
     while True:
