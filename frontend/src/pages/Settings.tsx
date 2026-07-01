@@ -42,7 +42,7 @@ export default function Settings() {
   const fetchPanelVersion = async () => {
     setPanelVersionLoading(true);
     try {
-      const res = await axios.get('/api/panel/version');
+      const res = await axios.get('/api/panel/version', { timeout: 10000 });
       if (res.data?.success) {
         setPanelVersion(res.data.local_rev || 'unknown');
         setPanelUpdateAvailable(Boolean(res.data.update_available));
@@ -51,6 +51,7 @@ export default function Settings() {
       }
     } catch (err: any) {
       console.error('Failed to fetch panel version', err);
+      setPanelVersion('unknown');
     } finally {
       setPanelVersionLoading(false);
     }

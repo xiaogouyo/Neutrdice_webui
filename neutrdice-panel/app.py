@@ -308,7 +308,7 @@ def fetch_sealdice_versions():
 
         url = "https://raw.githubusercontent.com/DiceZone/Sealdice-Docker/main/release_info.json"
         req = urllib.request.Request(url, headers={"User-Agent": "Neutrdice-Panel"})
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=5) as resp:
             data = json.loads(resp.read().decode())
 
         versions = {
@@ -758,7 +758,7 @@ def _fetch_github_latest_tag(org_repo: str) -> tuple[str, str]:
 
         url = f"https://api.github.com/repos/{org_repo}/releases/latest"
         req = urllib.request.Request(url, headers={"User-Agent": "Neutrdice-Panel", "Accept": "application/vnd.github+json"})
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=5) as resp:
             data = json.loads(resp.read().decode())
 
         tag = data.get("tag_name", "").lstrip("v")
@@ -784,21 +784,17 @@ def api_panel_version():
             log("api_panel_version cache hit")
             return jsonify(_panel_version_cache["data"])
 
-        # 从 GitHub Releases 获取最新版本信息
-        latest_tag, release_body = _fetch_github_latest_tag(NEUTRDICE_PANEL_REPO.rstrip(".git").replace("https://github.com/", ""))
+        # 立即返回本地版本，不等待 GitHub API
+        local_rev = os.environ.get("IMAGE_TAG", "unknown")
 
-        # 尝试从本地 git 读取当前版本（如果是在容器内从 git clone 运行的）
-        local_rev = ""
-        repo_path = os.environ.get("NEUTRDICE_PANEL_REPO_PATH", "/app/compose")
-        if os.path.exists(os.path.join(repo_path, ".git")):
-            local_rev = _get_local_git_revision(repo_path)
-
-        # 如果没有本地版本信息，从镜像标签中尝试提取
-        if not local_rev:
-            import socket
-            hostname = socket.gethostname()
-            # 尝试用 IMAGE_TAG 环境变量或默认值
-            local_rev = os.environ.get("IMAGE_TAG", "unknown")
+        # 异步获取最新版本
+        latest_tag, release_body = "", ""
+        try:
+            latest_tag, release_body = _fetch_github_latest_tag(
+                NEUTRDICE_PANEL_REPO.rstrip(".git").replace("https://github.com/", "")
+            )
+        except Exception:
+            pass
 
         update_available = bool(latest_tag and local_rev and latest_tag != local_rev)
         payload = {
