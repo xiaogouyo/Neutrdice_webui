@@ -12,7 +12,7 @@ export default function Logs() {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const logEndRef = useRef<HTMLDivElement>(null);
-  const wsRef = useRef<WebSocket | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   const fetchLogs = useCallback(async () => {
     if (!id) return;
@@ -34,33 +34,33 @@ export default function Logs() {
     fetchLogs();
   }, [fetchLogs]);
 
+  // SSE for live log streaming (using EventSource instead of WebSocket)
   useEffect(() => {
     if (!autoRefresh || !id) return;
 
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//${window.location.host}/api/ws/logs/${id}`;
-
-    try {
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
-
-      ws.onmessage = (event) => {
-        setLogs((prev) => {
-          const newLog = prev + '\n' + event.data;
-          return newLog.slice(-50000);
-        });
-      };
-
-      ws.onerror = () => {
-        setAutoRefresh(false);
-      };
-
-      return () => {
-        ws.close();
-      };
-    } catch {
-      setAutoRefresh(false);
+    // Close existing connection
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
     }
+
+    const es = new EventSource(`/api/logs/stream/${encodeURIComponent(id)}`);
+    eventSourceRef.current = es;
+
+    es.onmessage = (event) => {
+      setLogs((prev) => {
+        const newLog = prev + '\n' + event.data;
+        return newLog.slice(-50000);
+      });
+    };
+
+    es.onerror = () => {
+      setAutoRefresh(false);
+      es.close();
+    };
+
+    return () => {
+      es.close();
+    };
   }, [autoRefresh, id]);
 
   useEffect(() => {

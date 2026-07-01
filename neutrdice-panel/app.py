@@ -929,8 +929,7 @@ def auth_login():
 
 @app.route("/auth/check")
 def auth_check():
-    password = os.environ.get("PANEL_PASSWORD", "neutrdice2024")
-    return jsonify({"authenticated": True, "password": password})
+    return jsonify({"authenticated": True})
 
 
 @app.route("/containers/<container>")
