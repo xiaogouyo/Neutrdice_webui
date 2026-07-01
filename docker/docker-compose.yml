@@ -5,9 +5,17 @@ version: '3.8'
 # 多实例部署：创建不同 .env 文件，用 docker compose -f docker/docker-compose.yml --env-file 启动
 
 services:
+  # ===== 镜像配置 =====
+  # 使用说明：通过 IMAGE_MIRROR 环境变量切换镜像源
+  # 可选值：ghcr.io（默认）、daocloud、gcr
+  x-mirror-config: &mirror-config
+    GHCR_IMAGE: ghcr.io/${GITHUB_REPO:-xiaogouyo/neutrdice_webui}
+    DAOCLOUD_IMAGE: docker.m.daocloud.io/${GITHUB_REPO:-xiaogouyo/neutrdice_webui}
+    GCR_IMAGE: mirror.gcr.io/${GITHUB_REPO:-xiaogouyo/neutrdice_webui}
+
   # ===== 管理面板（后端） =====
   neutrdice-panel:
-    image: ghcr.io/${GITHUB_REPO:-xiaogouyo/neutrdice_webui}/neutrdice-panel:${PANEL_VERSION:-latest}
+    image: ${IMAGE_MIRROR:-ghcr.io}/${GITHUB_REPO:-xiaogouyo/neutrdice_webui}/neutrdice-panel:${PANEL_VERSION:-latest}
     container_name: ${COMPOSE_PROJECT_NAME:-docker-3001}-panel
     labels:
       - "neutrdice.instance=${COMPOSE_PROJECT_NAME:-docker-3001}-panel"
@@ -43,7 +51,7 @@ services:
 
   # ===== 管理面板（前端） =====
   neutrdice-frontend:
-    image: ghcr.io/${GITHUB_REPO:-xiaogouyo/neutrdice_webui}/neutrdice-frontend:${PANEL_VERSION:-latest}
+    image: ${IMAGE_MIRROR:-ghcr.io}/${GITHUB_REPO:-xiaogouyo/neutrdice_webui}/neutrdice-frontend:${PANEL_VERSION:-latest}
     container_name: ${COMPOSE_PROJECT_NAME:-docker-3001}-frontend
     labels:
       - "neutrdice.instance=${COMPOSE_PROJECT_NAME:-docker-3001}-frontend"
