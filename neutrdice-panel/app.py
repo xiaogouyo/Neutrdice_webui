@@ -84,7 +84,6 @@ def _get_napcat_webui_token(container_name: str) -> str:
         # NapCat 的配置文件在 /app/napcat/config/webui.json
         result = container.exec_run("cat /app/napcat/config/webui.json")
         if result.exit_code == 0:
-            import json
             config = json.loads(result.output.decode("utf-8"))
             return config.get("token", "")
     except Exception:
