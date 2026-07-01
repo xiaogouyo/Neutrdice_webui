@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: write
 
     steps:
       - name: Checkout repo
@@ -40,6 +41,64 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Set up Docker Buildx
+        if: steps.check_release.outputs.exists == 'false'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        if: steps.check_release.outputs.exists == 'false'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (backend)
+        if: steps.check_release.outputs.exists == 'false'
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/neutrdice-panel
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=${{ steps.info.outputs.tag_name }}
+
+      - name: Build and push backend image
+        if: steps.check_release.outputs.exists == 'false'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/backend.Dockerfile
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Extract metadata (frontend)
+        if: steps.check_release.outputs.exists == 'false'
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/neutrdice-frontend
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=${{ steps.info.outputs.tag_name }}
+
+      - name: Build and push frontend image
+        if: steps.check_release.outputs.exists == 'false'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/frontend.Dockerfile
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       - name: Create Release
         if: steps.check_release.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
@@ -52,6 +111,11 @@ jobs:
             **提交**: `${{ steps.info.outputs.commit_hash }}`
             **提交信息**: ${{ steps.info.outputs.commit_msg }}
             **构建日期**: ${{ steps.info.outputs.commit_date }}
+
+            ### 镜像地址
+
+            - 后端: `ghcr.io/${{ github.repository }}/neutrdice-panel:${{ steps.info.outputs.tag_name }}`
+            - 前端: `ghcr.io/${{ github.repository }}/neutrdice-frontend:${{ steps.info.outputs.tag_name }}`
 
             ### 变更
 
